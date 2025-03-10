@@ -1,0 +1,34 @@
+{{- define "header" -}}
+<!doctype html>
+<meta charset=utf-8>
+<title>{{ .Name }}</title>
+<link rel=stylesheet href='{{ .Static }}/florilegium.css'>
+<main>
+<header>
+{{ if eq .Type "show" }}
+  <h1 note='edit page'><a href="/e/{{ .Name }}">{{ .Name }}</a></h1>
+{{ else if eq .Type "edit" }}
+  <h1 note='show page'><a href="/{{ .Name }}">{{ .Name }}</a></h1>
+{{ else }}
+  <h1>{{ .Name }}</h1>
+{{ end }}
+</header>
+{{- end -}}
+{{- define "footer" -}}
+</main>
+<footer>
+  <nav>
+    <a href="/">🍵</a>
+    <a href="/a">🖼️</a>
+    <a href="/*">🔍</a>
+  </nav>
+</footer>
+{{- end -}}
+{{- define "art" -}}
+<form method=post enctype=multipart/form-data>
+  <p>
+    <input type=file name=upload size=24>
+  <p>
+    <input type=submit>
+</form>
+{{- end -}}
