@@ -20,6 +20,8 @@ import (
 	"blekksprut.net/sisyphus"
 )
 
+const Version = "0.0.1"
+
 type Garden struct {
 	Root *os.Root
 }
