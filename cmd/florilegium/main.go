@@ -153,7 +153,6 @@ func main() {
 
 	prefix := ""
 
-	// setenvifmissing
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET "+prefix+"/*", server.List)
 	mux.HandleFunc("GET "+prefix+"/a", server.Art)
@@ -162,9 +161,6 @@ func main() {
 
 	mux.HandleFunc("POST "+prefix+"/a", server.Upload)
 	mux.HandleFunc("POST "+prefix+"/{name...}", server.Post)
-	mux.Handle("GET /static/", http.FileServer(http.FS(static)))
-	mux.Handle("GET /src/", http.FileServer(http.Dir("")))
-	mux.Handle("GET /t/", http.FileServer(http.Dir("")))
 
 	if os.Getenv("GATEWAY_INTERFACE") != "" {
 		err := cgi.Serve(mux)
@@ -173,6 +169,10 @@ func main() {
 		}
 		return
 	}
+
+	mux.Handle("GET /static/", http.FileServer(http.FS(static)))
+	mux.Handle("GET /src/", http.FileServer(http.Dir("")))
+	mux.Handle("GET /t/", http.FileServer(http.Dir("")))
 
 	fmt.Fprintln(os.Stderr, "let's listen to :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
