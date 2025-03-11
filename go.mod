@@ -1,8 +1,6 @@
 module blekksprut.net/florilegium
 
-go 1.24
-
-toolchain go1.24.0
+go 1.24.1
 
 require (
 	blekksprut.net/sisyphus v0.4.4
