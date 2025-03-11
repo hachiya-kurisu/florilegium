@@ -13,6 +13,6 @@ we can always dream
 
 florilegium is a private wiki for words and art
 
-## get to the roots
+## how do i...?
 
-...
+you don't - not yet! maybe when this gets to 0.1.0 🤔
