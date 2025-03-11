@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blekksprut.net/florilegium"
 	"embed"
 	"fmt"
 	"html/template"
@@ -9,8 +10,6 @@ import (
 	"net/http/cgi"
 	"net/url"
 	"os"
-
-	"blekksprut.net/florilegium"
 )
 
 //go:embed *.html
@@ -24,7 +23,7 @@ var templates *template.Template
 var (
 	Source = "wiki"
 	Static = "/static"
-	Home = "florilegium"
+	Home   = "florilegium"
 )
 
 func redirect(w http.ResponseWriter, r *http.Request) {

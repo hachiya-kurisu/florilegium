@@ -1,7 +1,14 @@
 package florilegium
 
 import (
+	"blekksprut.net/sisyphus"
 	"fmt"
+	"github.com/sqids/sqids-go"
+	"golang.org/x/image/draw"
+	"image"
+	_ "image/gif"
+	"image/jpeg"
+	_ "image/png"
 	"io"
 	"io/fs"
 	"os"
@@ -9,15 +16,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
-	"image"
-	_ "image/gif"
-	"image/jpeg"
-	_ "image/png"
-	"golang.org/x/image/draw"
-	"github.com/sqids/sqids-go"
-
-	"blekksprut.net/sisyphus"
 )
 
 const Version = "0.0.1"
@@ -40,13 +38,13 @@ func ValidName(name string) bool {
 }
 
 func SetEnvIfMissing(key, value string) {
-  _, ok := os.LookupEnv(key)
-  if !ok {
-    err := os.Setenv(key, value)
-    if err != nil {
-      panic(err)
-    }
-  }
+	_, ok := os.LookupEnv(key)
+	if !ok {
+		err := os.Setenv(key, value)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (g *Garden) Plant(name string, data string) error {
@@ -94,7 +92,7 @@ func (g *Garden) Raw(name string, w io.Writer) {
 
 type StrollFunc func(path string)
 
-func (g *Garden) Store(r io.ReadSeekCloser) (error) {
+func (g *Garden) Store(r io.ReadSeekCloser) error {
 	img, format, err := image.Decode(r)
 	if err != nil {
 		return fmt.Errorf("invalid image")
@@ -110,27 +108,27 @@ func (g *Garden) Store(r io.ReadSeekCloser) (error) {
 
 	bounds := img.Bounds()
 	w, h := float64(bounds.Dx()), float64(bounds.Dy())
-  switch {
-  case h < w:
-    h = h * float64(256) / w
-    w = float64(256)
-  case h > w:
-    w = w * float64(256) / h
-    h = float64(256)
-  default:
-    w, h = float64(256), float64(256)
-  }
-  t, err := os.Create("t/" + id)
-  if err != nil {
-    return err
-  }
-  defer t.Close()
+	switch {
+	case h < w:
+		h = h * float64(256) / w
+		w = float64(256)
+	case h > w:
+		w = w * float64(256) / h
+		h = float64(256)
+	default:
+		w, h = float64(256), float64(256)
+	}
+	t, err := os.Create("t/" + id)
+	if err != nil {
+		return err
+	}
+	defer t.Close()
 
 	dst := image.NewRGBA(image.Rect(0, 0, int(w), int(h)))
-  draw.CatmullRom.Scale(dst, dst.Rect, img, bounds, draw.Src, nil)
-  jpeg.Encode(t, dst, &jpeg.Options{Quality: 60})
+	draw.CatmullRom.Scale(dst, dst.Rect, img, bounds, draw.Src, nil)
+	jpeg.Encode(t, dst, &jpeg.Options{Quality: 60})
 
-  return nil
+	return nil
 }
 
 func (g *Garden) ArtStroll(fn StrollFunc) {
@@ -184,17 +182,17 @@ func (g *Garden) Read(name string, w io.Writer) error {
 const Alphabet string = "437uxtyegbzpd6qh9c1w2o5jfkl80ivmnras"
 
 func timestampSqid() string {
-  s, err := sqids.New(sqids.Options{
-    Alphabet:  Alphabet,
-    Blocklist: []string{},
-  })
-  if err != nil {
-    panic(err)
-  }
-  timestamp := time.Now().UnixMicro()
-  id, err := s.Encode([]uint64{uint64(timestamp)})
-  if err != nil {
-    panic(err)
-  }
-  return id
+	s, err := sqids.New(sqids.Options{
+		Alphabet:  Alphabet,
+		Blocklist: []string{},
+	})
+	if err != nil {
+		panic(err)
+	}
+	timestamp := time.Now().UnixMicro()
+	id, err := s.Encode([]uint64{uint64(timestamp)})
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
