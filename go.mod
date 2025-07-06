@@ -9,4 +9,4 @@ require (
 	golang.org/x/sys v0.33.0
 )
 
-require blekksprut.net/aspeq v0.5.1 // indirect
+require blekksprut.net/aspeq v0.5.2 // indirect
