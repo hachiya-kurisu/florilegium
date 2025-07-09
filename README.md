@@ -16,3 +16,7 @@ florilegium is a private wiki for words and art
 ## how do i...?
 
 you don't - not yet! maybe when this gets to 0.1.0 🤔
+
+## author
+
+[蜂谷栗栖](https://blekksprut.net/)
