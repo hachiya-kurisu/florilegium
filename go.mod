@@ -1,6 +1,6 @@
 module blekksprut.net/florilegium
 
-go 1.24.4
+go 1.24.5
 
 require (
 	blekksprut.net/sisyphus v0.4.5
@@ -9,4 +9,4 @@ require (
 	golang.org/x/sys v0.33.0
 )
 
-require blekksprut.net/aspeq v0.5.2 // indirect
+require blekksprut.net/aspeq v0.6.0 // indirect
