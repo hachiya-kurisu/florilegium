@@ -1,6 +1,6 @@
 module blekksprut.net/florilegium
 
-go 1.24.5
+go 1.24.6
 
 require (
 	blekksprut.net/sisyphus v0.4.5
