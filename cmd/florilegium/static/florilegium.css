@@ -31,6 +31,21 @@ textarea {
   width: 100%; max-width: 100%; resize: none;
 }
 
+p.error {
+  position: fixed;
+  inset: 0 0 auto 0;
+  margin: 0;
+  background: #ff6b6b;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  z-index: 500;
+}
+
+body:has(.error) {
+  padding-top: 64px;
+}
+
 /* colors */
 body { color: #171717; }
 a { color: #00bfff; }
@@ -71,7 +86,7 @@ article img {
   box-shadow: -8px 8px 8px rgba(0, 0, 0, 0.4);
 }
 
-html {
+html, body {
   background: #b0e0e6;
   background: radial-gradient(at right top, #b0e0e6, #ffffff);
   background-attachment: fixed; animation: gradientpulse 30s ease infinite;

@@ -19,4 +19,4 @@ you don't - not yet! maybe when this gets to 0.1.0 🤔
 
 ## author
 
-[蜂谷栗栖](https://blekksprut.net/)
+[蜂谷栗栖](//blekksprut.net/)

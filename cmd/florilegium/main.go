@@ -1,19 +1,26 @@
 package main
 
 import (
-	"blekksprut.net/florilegium"
+	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"embed"
+	"encoding/base64"
 	"fmt"
+	"html"
 	"html/template"
 	"log"
 	"net/http"
 	"net/http/cgi"
 	"net/url"
 	"os"
+
+	"blekksprut.net/florilegium"
 )
 
 //go:embed *.html
-var html embed.FS
+var htmlFS embed.FS
 
 //go:embed static/*
 var static embed.FS
@@ -31,8 +38,18 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/"+home, 302)
 }
 
+func masterToken() string {
+	seed := make([]byte, 32)
+	_, err := rand.Read(seed)
+	if err != nil {
+		panic(err)
+	}
+	return base64.URLEncoding.EncodeToString(seed)
+}
+
 type Server struct {
 	Garden *florilegium.Garden
+	Token  string
 }
 
 type Page struct {
@@ -44,12 +61,23 @@ func (p *Page) Static() string {
 	return os.Getenv("FLORILEGIUM_STATIC")
 }
 
+func (s *Server) dataToken(name string) string {
+	var buf bytes.Buffer
+	s.Garden.Raw(name, &buf)
+	h := sha256.New()
+	h.Write(buf.Bytes())
+	h.Write([]byte(s.Token))
+	hash := h.Sum(nil)
+	return base64.URLEncoding.EncodeToString(hash[:16])
+}
+
 func (s *Server) List(w http.ResponseWriter, r *http.Request) {
 	page := Page{"検索", "list"}
 	templates.ExecuteTemplate(w, "header", &page)
 	fmt.Fprintln(w, "<nav>")
 	fmt.Fprintln(w, "<ul>")
-	s.Garden.Stroll(func(name string) {
+	s.Garden.Stroll(func(raw string) {
+		name := html.EscapeString(raw)
 		fmt.Fprintf(w, "<li><a href='%s'>%s</a>\n", name, name)
 	})
 	fmt.Fprintln(w, "</ul>")
@@ -60,6 +88,7 @@ func (s *Server) List(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Get(w http.ResponseWriter, r *http.Request) {
 	home := os.Getenv("FLORILEGIUM_HOME")
 	name := r.PathValue("name")
+
 	if name == "" {
 		http.Redirect(w, r, "/"+home, 302)
 		return
@@ -84,7 +113,8 @@ func (s *Server) Art(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "art", &page)
 
 	fmt.Fprintln(w, "<ul class=art>")
-	s.Garden.ArtStroll(func(name string) {
+	s.Garden.ArtStroll(func(raw string) {
+		name := html.EscapeString(raw)
 		fmt.Fprintln(w, "<li>")
 		fmt.Fprintf(w, "<a href='/src/%s'><img src='/t/%s' alt></a>\n", name, name)
 	})
@@ -107,13 +137,24 @@ func (s *Server) Upload(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) Edit(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
+	token := s.dataToken(name)
+
 	page := Page{name, "edit"}
 	templates.ExecuteTemplate(w, "header", &page)
 
+	if r.Method == "POST" {
+		fmt.Fprintf(w, "<p class=error>edit conflict or invalid token")
+	}
+
 	action := url.QueryEscape(name)
 	fmt.Fprintf(w, "<form method=post action='/%s'>", action)
+	fmt.Fprintf(w, "<input type=hidden name=csrf value='%s'>", token)
 	fmt.Fprintf(w, "<p><textarea name=text cols=72 rows=16 placeholder='…'>")
-	s.Garden.Raw(name, w)
+	if r.Method == "POST" {
+		fmt.Fprint(w, html.EscapeString(r.PostFormValue("text")))
+	} else {
+		s.Garden.Raw(name, w)
+	}
 	fmt.Fprintln(w, "</textarea>")
 	fmt.Fprintln(w, "<input type=submit value=保存>")
 	fmt.Fprintln(w, "<input type=reset value=リセット>")
@@ -123,10 +164,19 @@ func (s *Server) Edit(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) Post(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
+
+	token := []byte(r.PostFormValue("csrf"))
+	expected := []byte(s.dataToken(name))
+	if subtle.ConstantTimeCompare(token, expected) != 1 {
+		s.Edit(w, r)
+		return
+	}
+
 	text := r.PostFormValue("text")
 	err := s.Garden.Plant(name, text)
 	if err != nil {
-		panic(err)
+		http.Error(w, "unable to save page", http.StatusBadRequest)
+		return
 	}
 	http.Redirect(w, r, "/"+name, 302)
 }
@@ -144,10 +194,11 @@ func main() {
 		panic(err)
 	}
 
-	templates = template.Must(template.ParseFS(html, "*.html"))
+	templates = template.Must(template.ParseFS(htmlFS, "*.html"))
 
 	server := Server{
 		Garden: &florilegium.Garden{Root: root},
+		Token:  masterToken(),
 	}
 
 	prefix := ""
